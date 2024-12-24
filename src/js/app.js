@@ -16,14 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentTicketId = null;
   let ticketToDelete = null;
 
-  // Load tickets
-  async function loadTickets() {
-    const response = await fetch(`${API_URL}/?method=allTickets`);
-    const tickets = await response.json();
-    ticketList.innerHTML = '';
-    tickets.forEach(ticket => renderTicket(ticket));
-  }
-
   // Render a single ticket
   function renderTicket(ticket) {
     const li = document.createElement('li');
@@ -46,6 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="description"></div>
     `;
     ticketList.appendChild(li);
+  }
+
+  // Load tickets
+  async function loadTickets() {
+    const response = await fetch(`${API_URL}/?method=allTickets`);
+    const tickets = await response.json();
+    ticketList.innerHTML = '';
+    tickets.forEach((ticket) => renderTicket(ticket));
+  }
+
+  // Fetch full ticket details by ID
+  async function fetchTicketDetails(id) {
+    const response = await fetch(`${API_URL}/?method=ticketById&id=${id}`);
+    // eslint-disable-next-line no-return-await
+    return await response.json();
   }
 
   // Update a single ticket in the DOM
@@ -90,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = isChecked ? 'resolved' : 'open';
     await fetch(`${API_URL}/?method=editTicketStatus`, {
       method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id, status}),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
     });
     updateTicketInDOM(id); // Обновляем только изменённый тикет
   }
@@ -121,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const response = await fetch(`${API_URL}/?method=${method}`, {
       method: httpMethod,
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: currentTicketId,
         name: title,
@@ -154,17 +161,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Delete ticket
   async function deleteTicket() {
     if (!ticketToDelete) return;
-    const response = await fetch(`${API_URL}/?method=deleteTicket&id=${ticketToDelete}`, {method: 'DELETE'});
+    const response = await fetch(`${API_URL}/?method=deleteTicket&id=${ticketToDelete}`, { method: 'DELETE' });
     if (response.ok) {
       removeTicketFromDOM(ticketToDelete); // Удаляем тикет из DOM сразу после успешного ответа
     }
     hideDeleteModal();
-  }
-
-  // Fetch full ticket details by ID
-  async function fetchTicketDetails(id) {
-    const response = await fetch(`${API_URL}/?method=ticketById&id=${id}`);
-    return await response.json();
   }
 
   // Expand ticket description
@@ -179,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Event delegation for ticket actions
   ticketList.addEventListener('click', async (event) => {
-    const id = event.target.dataset.id;
+    const { id } = event.target.dataset;
     const ticketElement = event.target.closest('.ticket');
 
     if (event.target.classList.contains('toggle-status')) {
