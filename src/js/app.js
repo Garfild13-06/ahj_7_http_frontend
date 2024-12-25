@@ -19,12 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render a single ticket
   function renderTicket(ticket) {
     const li = document.createElement('li');
-    li.className = `ticket ${ticket.status === 'resolved' ? 'completed' : ''}`;
+    li.className = `ticket ${ticket.status ? 'completed' : ''}`; // Статус через boolean
     li.dataset.id = ticket.id;
     li.innerHTML = `
       <div class="title-row">
         <div class="left-section">
-          <input type="checkbox" ${ticket.status === 'resolved' ? 'checked' : ''} data-id="${ticket.id}" class="toggle-status">
+          <input type="checkbox" ${ticket.status ? 'checked' : ''} data-id="${ticket.id}" class="toggle-status">
           <span class="title" data-id="${ticket.id}">${ticket.title}</span>
         </div>
         <div class="right-section">
@@ -61,11 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const ticketElement = document.querySelector(`.ticket[data-id="${id}"]`);
     if (ticketElement) {
       const wasExpanded = ticketElement.classList.contains('open');
-      ticketElement.className = `ticket ${ticketDetails.status === 'resolved' ? 'completed' : ''}`;
+      ticketElement.className = `ticket ${ticketDetails.status ? 'completed' : ''}`; // Обновляем с boolean
       ticketElement.innerHTML = `
         <div class="title-row">
           <div class="left-section">
-            <input type="checkbox" ${ticketDetails.status === 'resolved' ? 'checked' : ''} data-id="${id}" class="toggle-status">
+            <input type="checkbox" ${ticketDetails.status ? 'checked' : ''} data-id="${id}" class="toggle-status">
             <span class="title" data-id="${id}">${ticketDetails.title}</span>
           </div>
           <div class="right-section">
@@ -94,13 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Toggle ticket status
   async function toggleStatus(id, isChecked) {
-    const status = isChecked ? 'resolved' : 'open';
-    await fetch(`${API_URL}/?method=editTicketStatus`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    });
-    updateTicketInDOM(id); // Обновляем только изменённый тикет
+    try {
+      const status = isChecked; // Устанавливаем статус как boolean
+      await fetch(`${API_URL}/?method=editTicketStatus`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }), // Передаём логическое значение
+      });
+      // После успешного изменения статуса обновляем тикет в DOM
+      updateTicketInDOM(id);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to toggle ticket status:', error);
+    }
   }
 
   // Show modal for adding/editing ticket
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: currentTicketId,
         name: title,
         description,
-        status: 'open',
+        status: false, // Новый тикет всегда "open"
       }),
     });
 
